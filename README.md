@@ -2,6 +2,8 @@
 
 Toolkit to make diagrams of helicity angles definitions for multibody decays
 
+![helplot](https://user-images.githubusercontent.com/31311235/226939991-f62ad6f8-96d2-4bb3-b490-8a06d3beb60d.png)
+
 ## Contents
 
 * `helplot.py` - Python module with definition of primitives
