@@ -17,5 +17,5 @@ Toolkit to make diagrams of helicity angles definitions for multibody decays
 
 The environment can be set up with [`conda`](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) by
 ```bash
-conda env create environment.yml
+conda env create -f environment.yml
 ```
