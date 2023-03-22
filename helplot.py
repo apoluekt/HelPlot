@@ -6,23 +6,28 @@ from scipy.spatial.transform import Rotation
 from mpl_toolkits.mplot3d import proj3d
 
 # Some predefined arrays
-zero = np.array([0, 0, 0], dtype = np.float64)
+zero = np.array([0, 0, 0], dtype=np.float64)
 
-xaxis = np.array([1, 0, 0], dtype = np.float64)
-yaxis = np.array([0, 1, 0], dtype = np.float64)
-zaxis = np.array([0, 0, 1], dtype = np.float64)
+xaxis = np.array([1, 0, 0], dtype=np.float64)
+yaxis = np.array([0, 1, 0], dtype=np.float64)
+zaxis = np.array([0, 0, 1], dtype=np.float64)
 
-xyplane = np.array([[-1, -1, 0], [-1, 1, 0], [1, 1, 0], [1, -1, 0]], dtype = np.float64)
-xzplane = np.array([[-1, 0, -1], [-1, 0, 1], [1, 0, 1], [1, 0, -1]], dtype = np.float64)
-yzplane = np.array([[0, -1, -1], [0, -1, 1], [0, 1, 1], [0, 1, -1]], dtype = np.float64)
+xyplane = np.array([[-1, -1, 0], [-1, 1, 0], [1, 1, 0],
+                   [1, -1, 0]], dtype=np.float64)
+xzplane = np.array([[-1, 0, -1], [-1, 0, 1], [1, 0, 1],
+                   [1, 0, -1]], dtype=np.float64)
+yzplane = np.array([[0, -1, -1], [0, -1, 1], [0, 1, 1],
+                   [0, 1, -1]], dtype=np.float64)
 
-class ArrayBase : 
+
+class ArrayBase:
     """
       Base class for types defined by a numpy array of shape (M, 3), 
       where M is arbitrary and second dimension corresponds to spatial coordinates.
       Implements rotations, shifts and scaling. 
     """
-    def rotate(self, axis, angle) : 
+
+    def rotate(self, axis, angle):
         """
           Rotate the object by 'angle' degrees around 'axis'. 
           Returns the rotated object. Does not modify self. 
@@ -30,14 +35,14 @@ class ArrayBase :
         rot = Rotation.from_rotvec(np.radians(angle)*axis)
         return self.__class__(rot.apply(self.arr), **self.kwargs)
 
-    def shift(self, vect) : 
+    def shift(self, vect):
         """
           Shift the object by 'vect'. 
           Returns the shifted object. Does not modify self. 
         """
         return self.__class__(self.arr + vect, **self.kwargs)
 
-    def scale(self, fact) : 
+    def scale(self, fact):
         """
           Scale the object by the factor 'fact' (either scalar or 3-vector). 
           Returns the scaled object. Does not modify the self. 
@@ -45,11 +50,12 @@ class ArrayBase :
         return self.__class__(self.arr*fact, **self.kwargs)
 
 
-class Plane(ArrayBase) : 
+class Plane(ArrayBase):
     """
       Plane in 3D defined by four points. Is represented by a rectangle. 
     """
-    def __init__(self, descr = "xy", **kwargs) : 
+
+    def __init__(self, descr="xy", **kwargs):
         """
           Constructor for the plane object. 'descr' is one of 
             - String 'xy', 'xy' or 'yz': defines a plane positioned at zero 
@@ -59,28 +65,31 @@ class Plane(ArrayBase) :
           Optionally, '**kwargs' can be provided and passed on to draw method
           (in this case, 'axis3d.plot'). 
         """
-        if isinstance(descr, str) : 
-            if descr == "xy" : 
+        if isinstance(descr, str):
+            if descr == "xy":
                 self.arr = xyplane
-            elif descr == "xz" : 
+            elif descr == "xz":
                 self.arr = xzplane
-            elif descr == "yz" : 
+            elif descr == "yz":
                 self.arr = yzplane
-        else : 
+        else:
             self.arr = descr
         self.kwargs = kwargs
 
-    def draw(self, ax) : 
+    def draw(self, ax):
         """
           Draw the rectangle (or any other representation) using triangulation. 
         """
-        ax.plot_trisurf(self.arr[:,0], self.arr[:,1], self.arr[:,2], **self.kwargs)
+        ax.plot_trisurf(self.arr[:, 0], self.arr[:, 1],
+                        self.arr[:, 2], **self.kwargs)
 
-class Angle : 
+
+class Angle:
     """
       Angle between lines or planes represented by one or several arcs. 
     """
-    def __init__(self, origin, angle, radius, norm = None, start = None, **kwargs) : 
+
+    def __init__(self, origin, angle, radius, norm=None, start=None, **kwargs):
         """
           Constructor for the angle. Two patterns are recognised: 
             * If 'origin' is a string: 
@@ -98,18 +107,18 @@ class Angle :
           Optionally, '**kwargs' can be provided and passed on to draw method
           (in this case, 'axis3d.plot_trisurf'). 
         """
-        if isinstance(origin, str) : 
-            if origin == "xy" : 
+        if isinstance(origin, str):
+            if origin == "xy":
                 self.norm = zaxis
                 self.start = xaxis
-            elif origin == "xz" : 
+            elif origin == "xz":
                 self.norm = -yaxis
                 self.start = xaxis
-            elif origin == "yz" : 
+            elif origin == "yz":
                 self.norm = xaxis
                 self.start = yaxis
             self.origin = zero
-        else : 
+        else:
             self.origin = origin
             self.norm = norm
             self.start = start
@@ -117,7 +126,7 @@ class Angle :
         self.radius = radius
         self.kwargs = kwargs
 
-    def rotate(self, axis, angle) : 
+    def rotate(self, axis, angle):
         """
           Rotate the object by 'angle' degrees around 'axis'. 
           Returns the rotated object. Does not modify self. 
@@ -125,21 +134,21 @@ class Angle :
         rot = Rotation.from_rotvec(np.radians(angle)*axis)
         return Angle(rot.apply(self.origin), self.angle, self.radius, rot.apply(self.norm), rot.apply(self.start), **self.kwargs)
 
-    def shift(self, vect) : 
+    def shift(self, vect):
         """
           Shift the object by 'vect'. 
           Returns the shifted object. Does not modify self. 
         """
         return Angle(self.origin + vect, self.angle, self.radius, self.norm, self.start, **self.kwargs)
 
-    def scale(self, fact) : 
+    def scale(self, fact):
         """
           Scale the object by the factor 'fact' (either scalar or 3-vector). 
           Returns the scaled object. Does not modify the self. 
         """
         return Angle(self.origin, self.angle, self.radius*fact, self.norm, self.start, **self.kwargs)
 
-    def draw(self, ax) : 
+    def draw(self, ax):
         """
           Draw the Angle object
         """
@@ -147,15 +156,20 @@ class Angle :
         u = self.start
         v = np.cross(self.norm, u)
         angles = np.linspace(0., np.radians(self.angle), arc_resolution)
-        radius = self.radius if type(self.radius) in [list, tuple] else [ self.radius ]
-        for r in radius : 
-            arc_points = self.origin + r*(np.outer(np.cos(angles),u) + np.outer(np.sin(angles),v))
-            ax.plot(arc_points[:,0], arc_points[:,1], arc_points[:,2], **self.kwargs)
+        radius = self.radius if type(self.radius) in [
+            list, tuple] else [self.radius]
+        for r in radius:
+            arc_points = self.origin + r * \
+                (np.outer(np.cos(angles), u) + np.outer(np.sin(angles), v))
+            ax.plot(arc_points[:, 0], arc_points[:, 1],
+                    arc_points[:, 2], **self.kwargs)
+
 
 class Arrow3D(FancyArrowPatch):
     """
       Auxiliary class for drawing the arrow in 3D. 
     """
+
     def __init__(self, xs, ys, zs, *args, **kwargs):
         FancyArrowPatch.__init__(self, (0, 0), (0, 0), *args, **kwargs)
         self._verts3d = xs, ys, zs
@@ -167,11 +181,12 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 
-class Line(ArrayBase) : 
+class Line(ArrayBase):
     """
       Line represented by two points in space
     """
-    def __init__(self, descr, **kwargs) : 
+
+    def __init__(self, descr, **kwargs):
         """
           Constructor for the line. Two patterns are recognised: 
             * If 'descr' is the string, one of 'x', 'y', 'z', '-x', '-y', '-z': 
@@ -180,54 +195,56 @@ class Line(ArrayBase) :
           Optionally, '**kwargs' can be provided and passed on to draw method
           (in this case, 'axis3d.plot'). 
         """
-        if isinstance(descr, str) : 
-            if descr == 'x' : 
-                self.arr = np.stack([zero, xaxis], axis = 0)
-            elif descr == 'y' : 
-                self.arr = np.stack([zero, yaxis], axis = 0)
-            elif descr == 'z' : 
-                self.arr = np.stack([zero, zaxis], axis = 0)
-            elif descr == '-x' : 
-                self.arr = np.stack([zero, -xaxis], axis = 0)
-            elif descr == '-y' : 
-                self.arr = np.stack([zero, -yaxis], axis = 0)
-            elif descr == '-z' : 
-                self.arr = np.stack([zero, -zaxis], axis = 0)
-        else : 
+        if isinstance(descr, str):
+            if descr == 'x':
+                self.arr = np.stack([zero, xaxis], axis=0)
+            elif descr == 'y':
+                self.arr = np.stack([zero, yaxis], axis=0)
+            elif descr == 'z':
+                self.arr = np.stack([zero, zaxis], axis=0)
+            elif descr == '-x':
+                self.arr = np.stack([zero, -xaxis], axis=0)
+            elif descr == '-y':
+                self.arr = np.stack([zero, -yaxis], axis=0)
+            elif descr == '-z':
+                self.arr = np.stack([zero, -zaxis], axis=0)
+        else:
             self.arr = descr
         self.kwargs = kwargs
 
-    def draw(self, ax) : 
+    def draw(self, ax):
         """
           Draw the line
         """
-        ax.plot([self.arr[0,0], self.arr[1,0]], 
-                [self.arr[0,1], self.arr[1,1]], 
-                [self.arr[0,2], self.arr[1,2]], 
+        ax.plot([self.arr[0, 0], self.arr[1, 0]],
+                [self.arr[0, 1], self.arr[1, 1]],
+                [self.arr[0, 2], self.arr[1, 2]],
                 **self.kwargs)
 
 
-class Arrow(Line) : 
+class Arrow(Line):
     """
       Arrow represented by two points in space ('from'->'to'). 
       Uses 'Line' as base class and the same constructor. 
     """
-    def draw(self, ax) : 
+
+    def draw(self, ax):
         """
           Draw the arrow. 
         """
-        arrow = Arrow3D([self.arr[0,0], self.arr[1,0]], 
-                        [self.arr[0,1], self.arr[1,1]], 
-                        [self.arr[0,2], self.arr[1,2]], 
-                        arrowstyle = '-|>', mutation_scale=20, **self.kwargs)
+        arrow = Arrow3D([self.arr[0, 0], self.arr[1, 0]],
+                        [self.arr[0, 1], self.arr[1, 1]],
+                        [self.arr[0, 2], self.arr[1, 2]],
+                        arrowstyle='-|>', mutation_scale=20, **self.kwargs)
         ax.add_artist(arrow)
 
 
-class Point(ArrayBase) : 
+class Point(ArrayBase):
     """
       Point in space. 
     """
-    def __init__(self, arr = zero, **kwargs) : 
+
+    def __init__(self, arr=zero, **kwargs):
         """
           Constructor. 
           'arr' is the array of 3 elements representing the coordinates of the point. 
@@ -237,18 +254,19 @@ class Point(ArrayBase) :
         self.arr = arr
         self.kwargs = kwargs
 
-    def draw(self, ax) : 
+    def draw(self, ax):
         """
           Draw the point. 
         """
         ax.scatter(self.arr[0], self.arr[1], self.arr[2], **self.kwargs)
 
 
-class Text : 
+class Text:
     """
       Text label bound to a point in 3D space. 
     """
-    def __init__(self, text, coord, **kwargs) : 
+
+    def __init__(self, text, coord, **kwargs):
         """
           Constructor for Text object. 
           - 'text' is the text label (string). 
@@ -260,7 +278,7 @@ class Text :
         self.arr = coord
         self.kwargs = kwargs
 
-    def rotate(self, axis, angle) : 
+    def rotate(self, axis, angle):
         """
           Rotate the object by 'angle' degrees around 'axis'. 
           Returns the rotated object. Does not modify self. 
@@ -268,61 +286,64 @@ class Text :
         rot = Rotation.from_rotvec(np.radians(angle)*axis)
         return Text(self.text, rot.apply(self.arr), **self.kwargs)
 
-    def shift(self, vect) : 
+    def shift(self, vect):
         """
           Shift the object by 'vect'. 
           Returns the shifted object. Does not modify self. 
         """
         return Text(self.text, self.arr + vect, **self.kwargs)
 
-    def scale(self, fact) : 
+    def scale(self, fact):
         """
           Scale the object by the factor 'fact' (either scalar or 3-vector). 
           Returns the scaled object. Does not modify the self. 
         """
         return Text(self.text, self.arr*fact, **self.kwargs)
 
-    def draw(self, ax) : 
+    def draw(self, ax):
         """
           Draw the text
         """
-        ax.text(self.arr[0], self.arr[1], self.arr[2], self.text, **self.kwargs)
+        ax.text(self.arr[0], self.arr[1],
+                self.arr[2], self.text, **self.kwargs)
 
 
-class Compound : 
+class Compound:
     """
       Compound can merge several objects such that they can be rotated, 
       shifted, scaled and drawn together. 
     """
-    def __init__(self, *elements) : 
+
+    def __init__(self, *elements):
         """
           Constructor for coumpound object. Takes objects to be combined as arguments. 
         """
         self.elements = elements
 
-    def rotate(self, axis, angle) : 
+    def rotate(self, axis, angle):
         """
           Rotate the object by 'angle' degrees around 'axis'. 
           Returns the rotated object. Does not modify self. 
         """
-        return Compound(*[ i.rotate(axis, angle) for i in self.elements ])
+        return Compound(*[i.rotate(axis, angle) for i in self.elements])
 
-    def shift(self, vect) : 
+    def shift(self, vect):
         """
           Shift the object by 'vect'. 
           Returns the shifted object. Does not modify self. 
         """
-        return Compound(*[ i.shift(vect) for i in self.elements ])
+        return Compound(*[i.shift(vect) for i in self.elements])
 
-    def scale(self, factor) : 
+    def scale(self, factor):
         """
           Scale the object by the factor 'fact' (either scalar or 3-vector). 
           Returns the scaled object. Does not modify the self. 
         """
-        return Compound(*[ i.scale(factor) for i in self.elements ])
+        return Compound(*[i.scale(factor) for i in self.elements])
 
-    def draw(self, ax) : 
+    def draw(self, ax):
         """
           Draw the compound object. 
         """
-        for i in self.elements : i.draw(ax)
+        for i in self.elements:
+            i.draw(ax)
