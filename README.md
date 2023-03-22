@@ -11,6 +11,11 @@ Toolkit to make diagrams of helicity angles definitions for multibody decays
 
 ## Requirements 
 
-`python`, `numpy` and `matplotlib`. 
+`python`, `numpy`, `scipy` and `matplotlib`. 
 
-`latex` for LaTeX labels. 
+`latex` for LaTeX labels.
+
+The environment can be set up with [`conda` by](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+```bash
+conda env create environment.yml
+```
