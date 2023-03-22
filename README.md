@@ -15,7 +15,7 @@ Toolkit to make diagrams of helicity angles definitions for multibody decays
 
 `latex` for LaTeX labels.
 
-The environment can be set up with [`conda` by](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html)
+The environment can be set up with [`conda`](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) by
 ```bash
 conda env create environment.yml
 ```
